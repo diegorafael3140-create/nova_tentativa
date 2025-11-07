@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Revisão PRF App</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3b82f6"/>
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<style>
+/* Estilos Gerais (CSS completo) */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%); min-height: 100vh; color: #f5f5f5; }
+.container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+.header { text-align: center; color: white; margin-bottom: 30px; padding: 20px; background: rgba(0, 0, 0, 0.3); border-radius: 15px; }
+.header h1 { font-size: 2.8em; margin-bottom: 10px; font-weight: 300; }
+.card { background: linear-gradient(145deg, #f8f9fa, #e9ecef); color: #333; border-radius: 20px; padding: 35px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3); margin-bottom: 25px; border: 1px solid #dee2e6; }
+.screen { display: none; }
+.screen.active { display: block; }
+.btn { background: linear-gradient(145deg, #3b82f6, #2563eb); color: white; border: none; padding: 15px 30px; border-radius: 10px; font-size: 16px; cursor: pointer; margin: 5px; transition: all 0.3s; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+.btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3); }
+.btn:disabled { background: #6c757d; cursor: not-allowed; }
+.btn-success { background: linear-gradient(145deg, #22c55e, #16a34a); }
+.btn-danger { background: linear-gradient(145deg, #ef4444, #b91c1c); }
+.btn-small-danger { font-size: 12px; padding: 5px 10px; background: linear-gradient(145deg, #ef4444, #b91c1c); border-radius: 5px; }
+.btn-warning-small { background: linear-gradient(145deg, #facc15, #eab308); color: #333; font-size: 14px; padding: 8px 16px; display: inline-block; text-decoration: none; border-radius: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; border: none; cursor: pointer; transition: all 0.3s; }
+.btn-warning-small:hover { transform: translateY(-2px); }
+.form-group { margin-bottom: 25px; }
+.form-group label { display: block; margin-bottom: 10px; font-weight: 600; color: #495057; }
+.form-group select, .form-group input, .form-group textarea { width: 100%; padding: 15px; border: 2px solid #ced4da; border-radius: 10px; font-size: 16px; }
+.form-group textarea { min-height: 150px; line-height: 1.5; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; margin-bottom: 25px; }
+.stat-card { background: linear-gradient(145deg, #333, #555); color: white; padding: 25px; border-radius: 15px; text-align: center; }
+.stat-number { font-size: 2.8em; font-weight: 300; margin-bottom: 8px; }
+.stat-label { text-transform: uppercase; letter-spacing: 1px; font-size: 0.9em; }
+#pending-list, #discipline-management-list { list-style-type: none; padding: 0; }
+#pending-list li, #discipline-management-list li { background-color: #f8f9fa; padding: 12px 18px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; font-weight: 500; border: 1px solid #e9ecef; }
+.list-container { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; }
+.list-container h3 { margin-bottom: 15px; color: #333; }
+.difficulty-buttons { margin-top: 20px; text-align: center; }
+.goal-item { display: grid; grid-template-columns: 1fr auto auto; gap: 15px; align-items: center; margin-bottom: 15px; }
+.goal-item label { flex-grow: 1; font-weight: bold; }
+.goal-item input, .goal-item select { width: 120px; text-align: center; padding: 8px; }
+.suggestion-box { background-color: #e3f2fd; color: #1e88e5; border: 1px solid #90caf9; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center; font-weight: 500; }
+.stats-filter-container { margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+.stats-filter-container label { font-weight: bold; }
+.stats-filter-container select { padding: 8px; border-radius: 8px; border: 2px solid #ced4da; }
+.accordion { padding: 10px 15px; font-size: 16px; margin-bottom: 5px; }
+.panel { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background-color: white; padding: 10px; border-radius: 0 0 10px 10px; margin-bottom: 5px; color: #333; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
+.subject-stat-item { background: #f8f9fa; padding: 10px; border-radius: 5px; border: 1px solid #e9ecef; }
+.subject-stat-item h4 { font-size: 1em; margin-bottom: 5px; }
+.evolution-chart { background: #f0f0f0; border-radius: 5px; padding: 5px; }
+.evolution-chart .bar { height: 16px; line-height: 16px; color: white; font-size: 11px; text-align: right; padding-right: 5px; border-radius: 3px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; font-weight: bold; }
+.bar-excellent { background-color: #22c55e; } .bar-good { background-color: #a3e635; color: #333; } .bar-regular { background-color: #facc15; color: #333; } .bar-weak { background-color: #ef4444; }
+.activity-monitor { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; }
+.streak-counter { text-align: center; font-size: 1.8em; font-weight: bold; margin-bottom: 20px; color: #ff9800; }
+.heatmap { display: grid; grid-template-rows: repeat(7, 1fr); grid-auto-flow: column; gap: 4px; overflow-x: auto; padding-bottom: 10px; }
+.heatmap-day { width: 15px; height: 15px; background-color: #ebedf0; border-radius: 3px; }
+.heatmap-day[data-level="1"] { background-color: #9be9a8; } .heatmap-day[data-level="2"] { background-color: #40c463; } .heatmap-day[data-level="3"] { background-color: #30a14e; } .heatmap-day[data-level="4"] { background-color: #216e39; }
+.heatmap-months { display: flex; justify-content: space-around; font-size: 12px; margin-bottom: 5px; }
+.progress-bar-container { width: 100%; height: 20px; background-color: #e0e0e0; border-radius: 10px; overflow: hidden; position: relative; }
+.progress-bar-fill { height: 100%; background-color: #3b82f6; border-radius: 10px; transition: width 0.5s ease; }
+.progress-bar-label { position: absolute; width: 100%; text-align: center; line-height: 20px; color: #333; font-weight: bold; font-size: 12px; }
+.goal-marker { position: absolute; top: 0; bottom: 0; width: 2px; background-color: #ef4444; }
+.subject-actions button { font-size: 12px; padding: 5px 10px; margin-top: 5px; background: #ddd; border: 1px solid #ccc; border-radius: 5px; cursor: pointer;}
+.subject-actions button:hover { background: #ccc; }
+#history-detail-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+#history-detail-table th, #history-detail-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+#history-detail-table th { background-color: #f2f2f2; }
+.add-discipline-form { display: flex; gap: 10px; margin-bottom: 20px; }
+.add-discipline-form input { flex-grow: 1; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header"><h1>REVISÃO ESPAÇADA POR QUESTÕES</h1><p>Versão PWA</p></div>
+  <div id="dashboard" class="screen active card">
+    <h2>Dashboard</h2>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-number" id="pending-count">0</div><div class="stat-label">Revisões Pendentes</div></div>
+      <div class="stat-card"><div class="stat-number" id="total-disciplines">0</div><div class="stat-label">Disciplinas</div></div>
+      <div class="stat-card"><div class="stat-number" id="avg-percentage">0%</div><div class="stat-label">Média Geral</div></div>
+    </div>
+    <div class="nav-buttons" style="text-align: center;">
+      <button class="btn" onclick="showScreen('add-subject')">Adicionar Assunto</button>
+      <button class="btn btn-success" id="start-review-btn" onclick="startReview()">Começar Revisão</button>
+      <button class="btn" onclick="showScreen('statistics')">Estatísticas</button>
+      <button class="btn" onclick="showScreen('goals')">Metas e Pesos</button>
+      <button class="btn" onclick="showScreen('manage-disciplines')">Disciplinas</button>
+    </div>
+    <div class="activity-monitor">
+        <div id="streak-counter" class="streak-counter"></div>
+        <div id="heatmap-months" class="heatmap-months"></div>
+        <div id="heatmap" class="heatmap"></div>
+    </div>
+    <div id="pending-list-container" class="list-container">
+        <h3>Revisões Pendentes (Priorizadas)</h3>
+        <ul id="pending-list"></ul>
+    </div>
+  </div>
+  <div id="add-subject" class="screen card">
+    <h2>Adicionar Assunto</h2>
+    <div class="form-group"><label>Disciplina:</label><select id="discipline-select"></select></div>
+    <div class="form-group"><label>Assunto:</label><input type="text" id="subject-input" /></div>
+    <div class="form-group"><label>Link do Banco de Questões (Opcional):</label><input type="url" id="question-bank-link" placeholder="https://..." /></div>
+    <div class="nav-buttons"><button class="btn" onclick="showScreen('dashboard')">Voltar</button><button class="btn btn-success" onclick="addSubject()">Adicionar</button></div>
+  </div>
+  <div id="review" class="screen card">
+    <h2>Revisão</h2>
+    <p><strong>Disciplina:</strong> <span id="review-discipline"></span></p>
+    <p><strong>Assunto:</strong> <span id="review-subject"></span></p>
+    <div id="question-bank-section" style="margin-bottom: 20px; display:none;"><a href="#" id="question-bank-button" target="_blank" class="btn-warning-small">Abrir Banco de Questões</a></div>
+    <div class="suggestion-box">Sugestão: Resolva de 15 a 30 questões para esta revisão.</div>
+    <div class="form-group"><label>Total de Questões Respondidas:</label><input type="number" id="total-questions" min="1"/></div>
+    <div class="form-group"><label>Questões Acertadas:</label><input type="number" id="correct-questions" min="0"/></div>
+    <div id="percentage-display" style="text-align:center; font-size: 1.5em; font-weight: bold; margin-bottom: 20px; display:none;"></div>
+    <div class="form-group"><label>Caderno de Erros / Bizus:</label><textarea id="error-notebook" placeholder="Anote aqui os principais aprendizados..."></textarea></div>
+    <div id="difficulty-buttons" class="difficulty-buttons" style="display:none;">
+        <h3>Como foi essa revisão?</h3>
+        <button class="btn btn-danger" onclick="confirmReview('dificil')">Difícil</button>
+        <button class="btn btn-success" onclick="confirmReview('normal')">Normal</button>
+        <button class="btn btn-success" onclick="confirmReview('facil')">Fácil</button>
+    </div>
+    <div class="nav-buttons" style="text-align:center;"><button class="btn" onclick="showScreen('dashboard')">Cancelar</button></div>
+  </div>
+  <div id="statistics" class="screen card">
+    <h2>Estatísticas</h2>
+    <div class="stats-filter-container">
+        <label for="stats-sort-filter">Ordenar por:</label>
+        <select id="stats-sort-filter">
+            <option value="padrao">Padrão (Alfabética)</option>
+            <option value="pior">Pior Desempenho</option>
+            <option value="melhor">Melhor Desempenho</option>
+        </select>
+    </div>
+    <div id="stats-container"></div>
+    <div class="nav-buttons"><button class="btn" onclick="showScreen('dashboard')">Voltar</button></div>
+  </div>
+  <div id="goals" class="screen card">
+    <h2>Metas e Prioridades</h2>
+    <p>Defina uma meta de acerto e uma prioridade de revisão para cada disciplina.</p>
+    <div id="goals-list" style="margin-top: 20px;"></div>
+    <div class="nav-buttons">
+        <button class="btn" onclick="showScreen('dashboard')">Voltar</button>
+        <button class="btn btn-success" onclick="saveGoals()">Salvar</button>
+    </div>
+  </div>
+  <div id="edit-subject" class="screen card">
+    <h2>Editar Assunto</h2>
+    <div class="form-group"><label>Disciplina:</label><select id="edit-discipline-select"></select></div>
+    <div class="form-group"><label>Assunto:</label><input type="text" id="edit-subject-input" /></div>
+    <div class="form-group"><label>Link do Banco de Questões (Opcional):</label><input type="url" id="edit-question-bank-link" /></div>
+    <div class="nav-buttons">
+        <button class="btn" onclick="showScreen('statistics')">Cancelar</button>
+        <button class="btn btn-success" onclick="saveSubjectChanges()">Salvar Alterações</button>
+    </div>
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center;">
+        <button class="btn btn-danger" onclick="deleteSubject()">Excluir Assunto</button>
+    </div>
+  </div>
+  <div id="history-detail" class="screen card">
+    <h2 id="history-detail-title">Histórico do Assunto</h2>
+    <div id="history-detail-content"></div>
+    <div class="nav-buttons">
+        <button class="btn" onclick="showScreen('statistics')">Voltar</button>
+    </div>
+  </div>
+  <div id="manage-disciplines" class="screen card">
+    <h2>Gerenciar Disciplinas</h2>
+    <div class="add-discipline-form">
+        <input type="text" id="new-discipline-input" placeholder="Nome da nova disciplina">
+        <button class="btn btn-success" onclick="addDiscipline()">Adicionar</button>
+    </div>
+    <div id="discipline-management-list-container" class="list-container">
+        <h3>Disciplinas Atuais</h3>
+        <ul id="discipline-management-list"></ul>
+    </div>
+    <div class="nav-buttons">
+        <button class="btn" onclick="showScreen('dashboard')">Voltar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'revisao-espacada-v1';
+
+class PRFSystem {
+    constructor() {
+        let currentData = null;
+        const oldKey = 'prf-subjects-v3.9';
+        
+        try {
+            currentData = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            const oldData = localStorage.getItem(oldKey);
+
+            if (!currentData && oldData) {
+                currentData = JSON.parse(oldData);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(currentData));
+            }
+        } catch (e) {
+            console.error("Erro ao carregar dados:", e);
+            currentData = [];
+        }
+        
+        this.subjects = currentData || [];
+        
+        // **********************************************
+        // LÓGICA DE PRÉ-CADASTRO DOS ASSUNTOS
+        // **********************************************
+        if (this.subjects.length === 0) {
+            this.subjects = getInitialSubjects();
+            this.save();
+            console.log('Assuntos iniciais pré-cadastrados.');
+        }
+
+        this.disciplines = this.getDisciplinesFromStorage();
+        this.currentReviewIndex = null;
+        this.currentSort = 'padrao';
+        this.currentEditingId = null;
+        this.setupListeners();
+        this.updateDashboard();
+        this.populateDisciplineSelects();
+    }
+    
+    // O resto da classe PRFSystem (getDisciplinesFromStorage, populateDisciplineSelects, 
+    // setupListeners, save, updateDashboard, addSubject, startReview, etc.) 
+    // permanece exatamente o mesmo que você forneceu/pediu, com os métodos aqui:
+
+    getDisciplinesFromStorage() {
+        const disciplineSet = new Set();
+        this.subjects.forEach(s => disciplineSet.add(s.discipline));
+        Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('discipline-')) {
+                disciplineSet.add(key.replace('discipline-', ''));
+            }
+        });
+        return [...disciplineSet].sort().map(d => {
+            const stored = JSON.parse(localStorage.getItem(`discipline-${d}`));
+            return { name: d, goal: stored?.goal || null, weight: stored?.weight || 'media' };
+        });
+    }
+    populateDisciplineSelects() {
+        const disciplineOptions = this.disciplines.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
+        document.getElementById('discipline-select').innerHTML = `<option value="">Selecione...</option>${disciplineOptions}`;
+        document.getElementById('edit-discipline-select').innerHTML = disciplineOptions;
+    }
+    setupListeners() {
+        document.getElementById('total-questions').addEventListener('input', () => this.calculatePercentage());
+        document.getElementById('correct-questions').addEventListener('input', () => this.calculatePercentage());
+        document.getElementById('stats-sort-filter').addEventListener('change', (e) => {
+            this.currentSort = e.target.value;
+            this.renderStatistics();
+        });
+    }
+    save() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.subjects));
+        this.disciplines.forEach(d => {
+            localStorage.setItem(`discipline-${d.name}`, JSON.stringify({ goal: d.goal, weight: d.weight }));
+        });
+    }
+    updateDashboard() {
+        const now = new Date();
+        let pendingSubjects = this.subjects.filter(s => new Date(s.due) <= now);
+        const weightMap = { 'alta': 1, 'media': 2, 'baixa': 3 };
+        pendingSubjects.sort((a, b) => {
+            const discA = this.disciplines.find(d => d.name === a.discipline);
+            const discB = this.disciplines.find(d => d.name === b.discipline);
+            const weightA = weightMap[discA?.weight || 'media'];
+            const weightB = weightMap[discB?.weight || 'media'];
+            if (weightA !== weightB) return weightA - weightB;
+            return new Date(a.due) - new Date(b.due);
+        });
+        document.getElementById('pending-count').textContent = pendingSubjects.length;
+        document.getElementById('total-disciplines').textContent = this.disciplines.length;
+        const subjectsWithHistory = this.subjects.filter(s => s.history.length > 0);
+        const avg = subjectsWithHistory.length > 0 ? Math.round(subjectsWithHistory.reduce((acc, s) => acc + s.history.at(-1).percentage, 0) / subjectsWithHistory.length) : 0;
+        document.getElementById('avg-percentage').textContent = avg + '%';
+        const startReviewBtn = document.getElementById('start-review-btn');
+        if (pendingSubjects.length > 0) {
+            startReviewBtn.innerHTML = `Revisar: <strong style="display: block; font-size: 0.8em;">${pendingSubjects[0].subject}</strong>`;
+            startReviewBtn.disabled = false;
+        } else {
+            startReviewBtn.innerHTML = 'Nenhuma Revisão';
+            startReviewBtn.disabled = true;
+        }
+        this.renderList(document.getElementById('pending-list'), pendingSubjects, 'Nenhuma revisão pendente!');
+        this.renderActivityMonitor();
+    }
+    addSubject() {
+        const discipline = document.getElementById('discipline-select').value.trim();
+        const subject = document.getElementById('subject-input').value.trim().toUpperCase();
+        const link = document.getElementById('question-bank-link').value.trim();
+        if (!discipline || !subject) return alert('Disciplina e Assunto são obrigatórios!');
+        if (this.subjects.find(s => s.discipline === discipline && s.subject === subject)) return alert('Este assunto já existe!');
+        this.subjects.push({
+            id: Date.now(), discipline, subject, questionBankLink: link, notebook: '', reps: 0,
+            due: new Date(), history: [], interval: 1, easeFactor: 2.5
+        });
+        if (!this.disciplines.find(d => d.name === discipline)) {
+            this.disciplines.push({ name: discipline, goal: null, weight: 'media' });
+        }
+        this.save(); this.updateDashboard(); this.populateDisciplineSelects(); this.showScreen('dashboard');
+        document.getElementById('subject-input').value = '';
+        document.getElementById('question-bank-link').value = '';
+        document.getElementById('discipline-select').value = '';
+    }
+    startReview() {
+        const now = new Date();
+        let pendingSubjects = this.subjects.filter(s => new Date(s.due) <= now);
+        if (pendingSubjects.length === 0) return alert('Não há revisões pendentes no momento!');
+        const weightMap = { 'alta': 1, 'media': 2, 'baixa': 3 };
+        pendingSubjects.sort((a, b) => {
+            const discA = this.disciplines.find(d => d.name === a.discipline);
+            const discB = this.disciplines.find(d => d.name === b.discipline);
+            const weightA = weightMap[discA?.weight || 'media'];
+            const weightB = weightMap[discB?.weight || 'media'];
+            if (weightA !== weightB) return weightA - weightB;
+            return new Date(a.due) - new Date(b.due);
+        });
+        const subjectToReview = pendingSubjects[0];
+        this.currentReviewIndex = this.subjects.findIndex(s => s.id === subjectToReview.id);
+        const s = this.subjects[this.currentReviewIndex];
+        document.getElementById('review-discipline').textContent = s.discipline;
+        document.getElementById('review-subject').textContent = s.subject;
+        const qbSection = document.getElementById('question-bank-section');
+        const qbButton = document.getElementById('question-bank-button');
+        if (s.questionBankLink) { qbButton.href = s.questionBankLink; qbSection.style.display = 'block'; }
+        else { qbSection.style.display = 'none'; }
+        document.getElementById('error-notebook').value = s.notebook || '';
+        document.getElementById('total-questions').value = '';
+        document.getElementById('correct-questions').value = '';
+        document.getElementById('percentage-display').style.display = 'none';
+        document.getElementById('difficulty-buttons').style.display = 'none';
+        this.showScreen('review');
+    }
+    calculatePercentage() {
+        const total = parseInt(document.getElementById('total-questions').value);
+        const correct = parseInt(document.getElementById('correct-questions').value);
+        const percDisplay = document.getElementById('percentage-display');
+        const diffButtons = document.getElementById('difficulty-buttons');
+        if (isNaN(total) || isNaN(correct) || total <= 0 || correct < 0 || correct > total) {
+            percDisplay.style.display = 'none'; diffButtons.style.display = 'none'; return;
+        }
+        const perc = Math.round((correct / total) * 100);
+        percDisplay.textContent = `Aproveitamento: ${perc}%`;
+        percDisplay.style.display = 'block'; diffButtons.style.display = 'block';
+    }
+    confirmReview(difficulty) {
+        if (!confirm("Tem certeza de que deseja salvar esta revisão?")) { return; }
+        const total = parseInt(document.getElementById('total-questions').value);
+        const correct = parseInt(document.getElementById('correct-questions').value);
+        if (isNaN(total) || isNaN(correct) || total <= 0 || correct < 0 || correct > total) return alert('Preencha os dados de acertos corretamente.');
+        const subj = this.subjects[this.currentReviewIndex];
+        const percentage = Math.round((correct / total) * 100);
+        subj.notebook = document.getElementById('error-notebook').value;
+        subj.history.push({ date: new Date().toISOString(), percentage, difficulty });
+        subj.reps++;
+        if (difficulty === 'dificil') { subj.easeFactor = Math.max(1.3, subj.easeFactor - 0.2); subj.interval = 1; }
+        else if (difficulty === 'normal') { subj.interval = Math.ceil(subj.interval * subj.easeFactor * 0.9); }
+        else if (difficulty === 'facil') { subj.easeFactor += 0.15; subj.interval = Math.ceil(subj.interval * subj.easeFactor * 1.1); }
+        subj.due = new Date(Date.now() + subj.interval * 24 * 60 * 60 * 1000);
+        this.save(); this.updateDashboard();
+        alert(`Revisão registrada! Próxima revisão em ${subj.interval} dia(s).`);
+        this.showScreen('dashboard');
+    }
+    renderGoals() {
+        const goalsList = document.getElementById('goals-list');
+        goalsList.innerHTML = '';
+        this.disciplines.sort((a,b) => a.name.localeCompare(b.name)).forEach(d => {
+            const item = document.createElement('div');
+            item.className = 'goal-item';
+            const subjectsInDisc = this.subjects.filter(s => s.discipline === d.name && s.history.length > 0);
+            const avg = subjectsInDisc.length > 0 ? Math.round(subjectsInDisc.reduce((acc, s) => acc + s.history.at(-1).percentage, 0) / subjectsInDisc.length) : 0;
+            item.innerHTML = `
+                <div>
+                    <label for="goal-${d.name}">${d.name}</label>
+                    <div class="progress-bar-container" title="Média: ${avg}%">
+                        <div class="progress-bar-label">${avg}%</div>
+                        <div class="progress-bar-fill" style="width: ${avg}%;"></div>
+                        ${d.goal ? `<div class="goal-marker" style="left: ${d.goal}%;" title="Meta: ${d.goal}%"></div>` : ''}
+                    </div>
+                </div>
+                <input type="number" id="goal-${d.name}" min="0" max="100" placeholder="Meta %" value="${d.goal || ''}">
+                <select id="weight-${d.name}">
+                    <option value="alta" ${d.weight === 'alta' ? 'selected' : ''}>Alta Prioridade</option>
+                    <option value="media" ${d.weight === 'media' ? 'selected' : ''}>Média Prioridade</option>
+                    <option value="baixa" ${d.weight === 'baixa' ? 'selected' : ''}>Baixa Prioridade</option>
+                </select>
+            `;
+            goalsList.appendChild(item);
+        });
+    }
+    saveGoals() {
+        this.disciplines.forEach(d => {
+            const goalValue = document.getElementById(`goal-${d.name}`).value;
+            const weightValue = document.getElementById(`weight-${d.name}`).value;
+            d.goal = goalValue ? parseInt(goalValue) : null;
+            d.weight = weightValue;
+        });
+        this.save(); alert('Metas e Prioridades salvas com sucesso!');
+        this.updateDashboard(); this.showScreen('dashboard');
+    }
+    renderStatistics() {
+        const container = document.getElementById('stats-container');
+        container.innerHTML = '';
+        this.disciplines.sort((a,b) => a.name.localeCompare(b.name)).forEach(disc => {
+            let subjectsInDisc = this.subjects.filter(s => s.discipline === disc.name);
+            if (subjectsInDisc.length === 0) return;
+            const lastPerc = (s) => s.history.length > 0 ? s.history.at(-1).percentage : -1;
+            if (this.currentSort === 'melhor') { subjectsInDisc.sort((a, b) => lastPerc(b) - lastPerc(a)); }
+            else if (this.currentSort === 'pior') { subjectsInDisc.sort((a, b) => lastPerc(a) - lastPerc(b)); }
+            else { subjectsInDisc.sort((a,b) => a.subject.localeCompare(b.subject)); }
+            const subjectsWithHistory = subjectsInDisc.filter(s => s.history.length > 0);
+            let disciplineAvgText = "";
+            if (subjectsWithHistory.length > 0) {
+                const avg = Math.round(subjectsWithHistory.reduce((acc, s) => acc + lastPerc(s), 0) / subjectsWithHistory.length);
+                disciplineAvgText = `(Média: ${avg}% / Meta: ${disc.goal || '-'}%)`;
+            } else { disciplineAvgText = `(Meta: ${disc.goal || '-'}%)`; }
+            const acc = document.createElement('button');
+            acc.className = 'accordion';
+            acc.textContent = `${disc.name} ${disciplineAvgText}`;
+            container.appendChild(acc);
+            const panel = document.createElement('div');
+            panel.className = 'panel';
+            subjectsInDisc.forEach(subj => {
+                const subjectContainer = document.createElement('div');
+                subjectContainer.className = 'subject-stat-item';
+                const subjectTitle = document.createElement('h4');
+                subjectTitle.textContent = subj.subject;
+                subjectContainer.appendChild(subjectTitle);
+                if (subj.history.length > 0) {
+                    const chart = document.createElement('div');
+                    chart.className = 'evolution-chart';
+                    subj.history.forEach(h => {
+                        const bar = document.createElement('div');
+                        bar.className = 'bar';
+                        if (h.percentage >= 90) bar.classList.add('bar-excellent');
+                        else if (h.percentage >= 80) bar.classList.add('bar-good');
+                        else if (h.percentage >= 70) bar.classList.add('bar-regular');
+                        else bar.classList.add('bar-weak');
+                        bar.style.width = `${h.percentage}%`; bar.textContent = `${h.percentage}%`;
+                        chart.appendChild(bar);
+                    });
+                    subjectContainer.appendChild(chart);
+                } else {
+                    const noData = document.createElement('p');
+                    noData.textContent = 'Nenhuma revisão registrada.'; noData.style.fontSize = '12px';
+                    subjectContainer.appendChild(noData);
+                }
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'subject-actions';
+                actionsDiv.innerHTML = `
+                    <button onclick="showHistoryDetail(${subj.id})">Histórico</button>
+                    <button onclick="showEditScreen(${subj.id})">Editar</button>
+                `;
+                subjectContainer.appendChild(actionsDiv);
+                panel.appendChild(subjectContainer);
+            });
+            container.appendChild(panel);
+            acc.addEventListener('click', function() {
+                this.classList.toggle('active');
+                const p = this.nextElementSibling;
+                p.style.maxHeight = p.style.maxHeight ? null : p.scrollHeight + "px";
+            });
+        });
+    }
+    renderActivityMonitor() {
+        const allDates = this.subjects.flatMap(s => s.history.map(h => h.date.substring(0, 10)));
+        const countsByDate = allDates.reduce((acc, date) => { acc[date] = (acc[date] || 0) + 1; return acc; }, {});
+        let streak = 0;
+        const today = new Date();
+        for (let i = 0; i < 365; i++) {
+            const dateToCheck = new Date(today);
+            dateToCheck.setDate(today.getDate() - i);
+            const dateString = dateToCheck.toISOString().substring(0, 10);
+            if (countsByDate[dateString]) { streak++; } else { if (i > 0) break; }
+        }
+        document.getElementById('streak-counter').innerHTML = `🔥 ${streak} ${streak === 1 ? 'dia de ofensiva' : 'dias de ofensiva'}!`;
+        const heatmap = document.getElementById('heatmap');
+        const monthLabels = document.getElementById('heatmap-months');
+        heatmap.innerHTML = ''; monthLabels.innerHTML = '';
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(endDate.getDate() - 120);
+        const months = new Map();
+        let day = new Date(startDate);
+        day.setDate(day.getDate() - day.getDay()); 
+        for (let i = 0; i < 121 + startDate.getDay(); i++) {
+            const dateString = day.toISOString().substring(0, 10);
+            const count = countsByDate[dateString] || 0;
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'heatmap-day';
+            let level = 0;
+            if (count > 0 && count <= 2) level = 1;
+            else if (count > 2 && count <= 5) level = 2;
+            else if (count > 5 && count <= 8) level = 3;
+            else if (count > 8) level = 4;
+            dayDiv.dataset.level = level;
+            dayDiv.title = `${dateString}: ${count} revisões`;
+            heatmap.appendChild(dayDiv);
+            if (day.getDate() === 1 || i === 0) {
+                const monthName = day.toLocaleString('default', { month: 'short' });
+                if (!months.has(monthName)) months.set(monthName, 0);
+            }
+            const currentMonthName = day.toLocaleString('default', { month: 'short' });
+            if(months.has(currentMonthName)) { months.set(currentMonthName, months.get(currentMonthName) + 1); }
+            day.setDate(day.getDate() + 1);
+        }
+        let monthBarHtml = '';
+        let totalDays = 0;
+        for (let [month, days] of months) {
+            totalDays += days;
+        }
+        if (totalDays > 0) {
+            for (let [month, days] of months) {
+                monthBarHtml += `<span style="flex-grow: ${days}; text-align: center;">${month}</span>`;
+            }
+        }
+        monthLabels.innerHTML = monthBarHtml;
+    }
+    showScreen(id) {
+        document.querySelectorAll('.screen').forEach(el => { el.style.display = 'none'; });
+        const screen = document.getElementById(id);
+        if (screen) {
+            screen.style.display = 'block';
+            if (id === 'statistics') this.renderStatistics();
+            if (id === 'goals') this.renderGoals();
+            if (id === 'manage-disciplines') this.renderManageDisciplinesScreen();
+        }
+    }
+    renderList(element, items, emptyMessage) {
+        element.innerHTML = '';
+        if (items.length > 0) {
+            items.forEach(s => {
+                const li = document.createElement('li');
+                const disc = this.disciplines.find(d => d.name === s.discipline);
+                const prioritySymbol = disc?.weight === 'alta' ? '🔴' : disc?.weight === 'media' ? '🟡' : '🟢';
+                let text = `${prioritySymbol} ${s.discipline} - ${s.subject}`;
+                if (s.history.length > 0) {
+                    const lastPerc = s.history.at(-1).percentage;
+                    text += ` (${lastPerc}%)`;
+                }
+                li.innerHTML = text; element.appendChild(li);
+            });
+        } else { element.innerHTML = `<li>${emptyMessage}</li>`; }
+    }
+    showEditScreen(subjectId) {
+        this.currentEditingId = subjectId;
+        const subject = this.subjects.find(s => s.id === subjectId);
+        if (!subject) return;
+        const disciplineSelect = document.getElementById('edit-discipline-select');
+        disciplineSelect.innerHTML = this.disciplines.map(d => `<option value="${d.name}" ${d.name === subject.discipline ? 'selected' : ''}>${d.name}</option>`).join('');
+        document.getElementById('edit-subject-input').value = subject.subject;
+        document.getElementById('edit-question-bank-link').value = subject.questionBankLink || '';
+        this.showScreen('edit-subject');
+    }
+    saveSubjectChanges() {
+        if (!this.currentEditingId) return;
+        if (!confirm("Salvar as alterações neste assunto?")) return;
+        const subjectIndex = this.subjects.findIndex(s => s.id === this.currentEditingId);
+        if (subjectIndex === -1) return;
+        this.subjects[subjectIndex].discipline = document.getElementById('edit-discipline-select').value;
+        this.subjects[subjectIndex].subject = document.getElementById('edit-subject-input').value.toUpperCase();
+        this.subjects[subjectIndex].questionBankLink = document.getElementById('edit-question-bank-link').value;
+        this.save();
+        alert('Assunto atualizado com sucesso!');
+        this.showScreen('statistics');
+    }
+    deleteSubject() {
+        if (!this.currentEditingId) return;
+        const subject = this.subjects.find(s => s.id === this.currentEditingId);
+        if (!subject) return;
+        if (confirm(`ATENÇÃO!\n\nVocê tem certeza que deseja excluir o assunto "${subject.subject}"?\n\nTodo o histórico de revisões será perdido permanentemente.`)) {
+            if(confirm(`CONFIRMAÇÃO FINAL:\n\nExcluir "${subject.subject}"? Esta ação não pode ser desfeita.`)) {
+                this.subjects = this.subjects.filter(s => s.id !== this.currentEditingId);
+                this.save();
+                this.updateDashboard();
+                alert('Assunto excluído com sucesso.');
+                this.showScreen('dashboard');
+            }
+        }
+    }
+    showHistoryDetail(subjectId) {
+        const subject = this.subjects.find(s => s.id === subjectId);
+        if (!subject) return;
+        document.getElementById('history-detail-title').textContent = `Histórico de: ${subject.subject}`;
+        const contentDiv = document.getElementById('history-detail-content');
+        if (subject.history.length === 0) {
+            contentDiv.innerHTML = '<p>Nenhuma revisão registrada para este assunto.</p>';
+        } else {
+            let tableHTML = '<table id="history-detail-table"><tr><th>Data</th><th>Desempenho</th><th>Dificuldade</th></tr>';
+            [...subject.history].reverse().forEach(h => {
+                tableHTML += `
+                    <tr>
+                        <td>${new Date(h.date).toLocaleDateString('pt-BR')}</td>
+                        <td>${h.percentage}%</td>
+                        <td>${h.difficulty}</td>
+                    </tr>
+                `;
+            });
+            tableHTML += '</table>';
+            contentDiv.innerHTML = tableHTML;
+        }
+        this.showScreen('history-detail');
+    }
+    renderManageDisciplinesScreen() {
+        const listContainer = document.getElementById('discipline-management-list');
+        listContainer.innerHTML = '';
+        this.disciplines.forEach(d => {
+            const hasSubjects = this.subjects.some(s => s.discipline === d.name);
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span>${d.name}</span>
+                <button class="btn btn-small-danger" onclick="deleteDiscipline('${d.name}')" ${hasSubjects ? 'disabled title="Exclua os assuntos desta disciplina primeiro"' : ''}>Excluir</button>
+            `;
+            listContainer.appendChild(li);
+        });
+    }
+    addDiscipline() {
+        const input = document.getElementById('new-discipline-input');
+        const newDisciplineName = input.value.trim().toUpperCase();
+        if (!newDisciplineName) return alert("O nome da disciplina não pode ser vazio.");
+        if (this.disciplines.find(d => d.name.toUpperCase() === newDisciplineName)) return alert("Esta disciplina já existe.");
+        this.disciplines.push({ name: newDisciplineName, goal: null, weight: 'media' });
+        this.disciplines.sort((a, b) => a.name.localeCompare(b.name));
+        this.save();
+        this.populateDisciplineSelects();
+        this.renderManageDisciplinesScreen();
+        input.value = '';
+        alert(`Disciplina "${newDisciplineName}" adicionada com sucesso!`);
+    }
+    deleteDiscipline(disciplineName) {
+        if (this.subjects.some(s => s.discipline === disciplineName)) {
+            alert("Não é possível excluir esta disciplina pois existem assuntos cadastrados nela. Vá em 'Estatísticas' para excluir os assuntos primeiro.");
+            return;
+        }
+        if (confirm(`Tem certeza que deseja excluir a disciplina "${disciplineName}"?`)) {
+            this.disciplines = this.disciplines.filter(d => d.name !== disciplineName);
+            localStorage.removeItem(`discipline-${disciplineName}`);
+            this.save();
+            this.populateDisciplineSelects();
+            this.renderManageDisciplinesScreen();
+            alert(`Disciplina "${disciplineName}" excluída com sucesso.`);
+        }
+    }
+}
+
+function getInitialSubjects() {
+    const rawSubjects = {
+        'LÍNGUA PORTUGUESA': [
+            'Compreensão e interpretação de textos de gêneros variados', 'Reconhecimento de tipos e gêneros textuais', 'Domínio da ortografia oficial', 'Mecanismos de coesão textual (referenciação, conectores, sequenciação)', 'Emprego de tempos e modos verbais', 'Emprego das classes de palavras', 'Relações de coordenação e subordinação entre orações', 'Emprego dos sinais de pontuação', 'Concordância verbal e nominal', 'Regência verbal e nominal', 'Emprego do sinal indicativo de crase', 'Colocação dos pronomes átonos', 'Reescrita de frases e parágrafos (Significação e Substituição)', 'Correspondência oficial (Manual de Redação da Presidência)'
+        ],
+        'MATEMÁTICA E RLM': [
+            'Modelagem de problemas (equações 1º e 2º graus, sistemas lineares)', 'Funções (Análise gráfica, afim, quadrática, exponencial, logarítmica)', 'Razão, proporção e regra de três', 'Porcentagem', 'Sequências numéricas (PA e PG)', 'Contagem, probabilidade e estatística (noções básicas)', 'Leitura e interpretação de tabelas e gráficos', 'Cálculo de médias e análise de desvios', 'Teoria dos conjuntos (noções básicas)', 'Figuras planas e espaciais (escalas, projeções, planificações)', 'Métrica (Áreas e volumes)'
+        ],
+        'INFORMÁTICA': [
+            'Conceito de internet e intranet', 'Ferramentas de navegação, correio eletrônico, busca e redes sociais', 'Noções de sistema operacional (Windows)', 'Acesso a distância, transferência de arquivos e multimídia', 'Transformação digital (IoT, Big Data, Inteligência Artificial)', 'Conceitos de proteção e segurança (Vírus, Phishing, Pragas virtuais)', 'Aplicativos para segurança (Antivírus, Firewall, VPN)', 'Computação na nuvem (Cloud Computing)'
+        ],
+        'FÍSICA': [
+            'Cinemática escalar e vetorial', 'Movimento circular', 'Leis de Newton e suas aplicações', 'Trabalho, Potência e Energia (cinética e potencial)', 'Conservação de energia e suas transformações', 'Quantidade de movimento, impulso e colisões'
+        ],
+        'ÉTICA E CIDADANIA': [
+            'Ética e moral, princípios e valores', 'Ética na função e no setor público (integridade, moralidade)', 'Código de Ética do Servidor Público (Decreto nº 1.171/1994)', 'Sistema de Gestão da Ética (Decreto nº 6.029/2007)', 'Exercício da cidadania e democracia', 'Transparência e acesso à informação (Lei nº 12.527/2011)', 'Conflitos de interesses e nepotismo (Lei nº 12.813/2013)'
+        ],
+        'GEOPOLÍTICA': [
+            'O Brasil político: nação e território', 'Organização do Estado Brasileiro', 'Divisão inter-regional do trabalho e produção no Brasil', 'Estrutura urbana brasileira e metrópoles', 'População e movimentos migratórios internos', 'Integração indústria-urbana-agrícola', 'Rede de transporte no Brasil', 'O Brasil na economia internacional', 'Geografia e gestão ambiental', 'Macrodivisão natural (biomas, domínios, ecossistemas)'
+        ],
+        'LÍNGUA ESPANHOLA': [
+            'Compreensão de texto escrito em língua espanhola', 'Itens gramaticais relevantes para a compreensão'
+        ],
+        'LEGISLAÇÃO DE TRÂNSITO': [
+            'Lei nº 9.503/1997 (Código de Trânsito Brasileiro - CTB)'
+        ],
+        'DIREITO ADMINISTRATIVO': [
+            'Organização administrativa (Centralização, Descentralização, etc.)', 'Ato administrativo (Conceito, requisitos, atributos, etc.)', 'Agentes públicos (Lei nº 8.112/1990 e disposições constitucionais)', 'Carreira de Policial Rodoviário Federal (Leis e Decretos)', 'Poderes administrativos (Hierárquico, disciplinar, de polícia, etc.)', 'Licitação (Princípios, modalidades, contratação direta, etc.)', 'Controle da Administração Pública (Administrativo, Judicial, Legislativo)', 'Responsabilidade civil do Estado', 'Regime jurídico-administrativo e seus princípios'
+        ],
+        'DIREITO CONSTITUCIONAL': [
+            'Poder constituinte (Originário, Derivado, Reforma, Revisão)', 'Direitos e deveres fundamentais (Individuais, coletivos, sociais)', 'Garantias e remédios constitucionais', 'Poder Executivo (Atribuições do Presidente, bens e competências da União)', 'Defesa do Estado e das instituições democráticas', 'Segurança pública (Art. 144 da CF e atribuições da PRF)', 'Ordem social (Seguridade, Meio Ambiente, Família, etc.)'
+        ],
+        'DIREITO PENAL': [
+            'Princípios básicos e Aplicação da lei penal', 'Tipicidade (Dolo, culpa, erro de tipo, consumado, tentado)', 'Ilicitude e causas de exclusão', 'Culpabilidade e causas de exclusão', 'Crimes contra a pessoa', 'Crimes contra o patrimônio', 'Crimes contra a dignidade sexual', 'Crimes contra a incolumidade e a fé pública', 'Crimes contra a Administração Pública'
+        ],
+        'DIREITO PROCESSUAL PENAL': [
+            'Ação penal (Conceito, espécies, condições)', 'Termo Circunstanciado de Ocorrência (Lei nº 9.099/1995)', 'Prova (Conceito, meios de prova, provas ilícitas)', 'Busca e apreensão', 'Prisão (Espécies, flagrante, mandado)', 'Identificação Criminal', 'Diligências Investigatórias'
+        ],
+        'LEGISLAÇÃO ESPECIAL': [
+            'Leis nº 5.553/68 e 12.037/09 (Identificação)', 'Lei nº 8.069/90 (Estatuto da Criança e do Adolescente - ECA)', 'Lei nº 8.072/90 (Crimes Hediondos)', 'Decreto nº 1.655/1995 (Transporte Internacional de Cargas)', 'Lei nº 9.099/95 (Juizados Especiais Cíveis e Criminais)', 'Lei nº 9.455/97 (Tortura)', 'Lei nº 9.605/98 (Crimes Ambientais)', 'Lei nº 10.826/03 (Estatuto do Desarmamento)', 'Lei nº 11.343/06 (Lei de Drogas)', 'Lei nº 12.850/13 (Organizações Criminosas)', 'Lei nº 13.675/18 (Sistema Único de Segurança Pública - SUSP)', 'Lei nº 13.869/19 (Abuso de Autoridade)'
+        ],
+        'DIREITOS HUMANOS': [
+            'Direitos humanos na Constituição Federal e Tratados Internacionais', 'Declaração Universal dos Direitos Humanos', 'Convenção Americana sobre Direitos Humanos (Pacto de San José)'
+        ]
+    };
+
+    const subjectsArray = [];
+    let idCounter = Date.now();
+    const today = new Date();
+
+    for (const discipline in rawSubjects) {
+        rawSubjects[discipline].forEach(subject => {
+            subjectsArray.push({
+                id: idCounter++,
+                discipline: discipline.toUpperCase(),
+                subject: subject.toUpperCase(),
+                questionBankLink: '',
+                notebook: '',
+                reps: 0,
+                due: new Date(today),
+                history: [],
+                interval: 1,
+                easeFactor: 2.5
+            });
+        });
+    }
+    return subjectsArray;
+}
+
+let prf = null;
+window.onload = () => {
+    prf = new PRFSystem();
+};
+
+function showScreen(id) { prf.showScreen(id); }
+function addSubject() { prf.addSubject(); }
+function startReview() { prf.startReview(); }
+function confirmReview(difficulty) { prf.confirmReview(difficulty); }
+function saveGoals() { prf.saveGoals(); }
+function showHistoryDetail(id) { prf.showHistoryDetail(id); }
+function showEditScreen(id) { prf.showEditScreen(id); }
+function saveSubjectChanges() { prf.saveSubjectChanges(); }
+function deleteSubject() { prf.deleteSubject(); }
+function addDiscipline() { prf.addDiscipline(); }
+function deleteDiscipline(name) { prf.deleteDiscipline(name); }
+
+// Registro do Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+            .then(registration => { console.log('SW registrado: ', registration.scope); })
+            .catch(error => { console.log('SW falhou: ', error); });
+    });
+}
+</script>
+</body>
+</html>
