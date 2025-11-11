@@ -76,7 +76,6 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 </style>
 </head>
 <body>
-<h1>TESTE: ATUALIZAÇÃO BEM-SUCEDIDA!</h1>
 <div class="container">
   <div class="header"><h1>REVISÃO ESPAÇADA POR QUESTÕES</h1><p>Versão PWA</p></div>
   <div id="dashboard" class="screen active card">
@@ -187,7 +186,12 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 </div>
 
 <script>
-const STORAGE_KEY = 'revisao-espacada-v1';
+const STORAGE_KEY = 'revisao-espacada-v1';// =======================================================
+// 1. INICIALIZAR A CONEXÃO COM O SUPABASE
+// =======================================================
+const SUPABASE_URL = 'SUA_URL_DO_PROJETO'; // Ex: https://ldqzfsgzftfenogretzrm.supabase.co
+const SUPABASE_ANON_KEY = 'SUA_CHAVE_PUBLICA'; // Sua chave que começa com 'eyJhbgci...'
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 class PRFSystem {
     constructor() {
@@ -258,9 +262,33 @@ class PRFSystem {
         });
     }
     save() {
+        async save() {
+    // 1. Prepara os dados para envio
+    const dataToSave = {
+        // ID para rastrear o registro (ID fixo para usar 'upsert')
+        id_unico: "MASTER_DATA", 
+        // Armazena o JSON completo dos assuntos
+        subjects_data: this.subjects, 
+        // Armazena o JSON completo das disciplinas e metas
+        disciplines_data: this.disciplines 
+    };
+
+    // 2. Tenta inserir (se for novo) ou atualizar (se já existir)
+    const { error } = await supabase
+        .from('registros') // Nome da sua tabela
+        .upsert([dataToSave], { onConflict: 'id_unico' });
+
+    if (error) {
+        console.error('ERRO AO SALVAR NO SUPABASE:', error);
+        alert('Erro ao salvar dados online! Sua conexão pode ter falhado ou o Supabase não está configurado.');
+    } else {
+        // Manter LocalStorage como backup local
         localStorage.setItem(STORAGE_KEY, JSON.stringify(this.subjects));
         this.disciplines.forEach(d => {
             localStorage.setItem(`discipline-${d.name}`, JSON.stringify({ goal: d.goal, weight: d.weight }));
+        });
+    }
+}
         });
     }
     updateDashboard() {
